@@ -62,7 +62,7 @@ def organize(workdir):
 
 # Function to notify on discord the new subdomains and post the new ones through notify.
 def alive_subs(workdir):
-	run_command(f"httpx -l {workdir}/subdomains.txt -sc -cl -title -td -o {workdir}/live_subdomains.txt -fc 400 | anew {workdir}/live_subdomains.txt | notify --silent")
+    run_command(f"httpx -l {workdir}/subdomains.txt -sc -cl -title -td -o {workdir}/live_subdomains.txt -fc 400 | anew {workdir}/live_subdomains.txt | notify --silent")
 
 # Function that calls all other functions to run all commands and then organize them. 
 def run_sub_recon(domains, workdir, amass_file, subfinder_file):
