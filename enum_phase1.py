@@ -45,7 +45,7 @@ def download_resolvers(workdir):
 
 # Function to run amass and parse result into amass_parsed.txt
 def run_amass(domains, workdir, amass_loc):
-    run_command(f"amass enum -df {workdir}/{domains} -config {amass_loc} -rf {workdir}/resolvers.txt --passive -o {workdir}/amass_raw.txt")
+    run_command(f"amass enum -df {domains} -config {amass_loc} -rf {workdir}/resolvers.txt --passive -o {workdir}/amass_raw.txt")
     run_command(f"cat {workdir}/amass_raw.txt | grep 'cname' | sort -u > {workdir} amass_cnames.txt")
     run_command(f"cat {workdir}/amass_raw.txt | grep '(IPAddress)' | cut -d '>' -f3 | cut -d ' ' -f2 | sort -u > amass_ipaddress.txt")
     run_command(f"cat {workdir}/amass_raw.txt | grep '/' | cut -d '-' -f1 | grep '/' | cut -d ' ' -f1 | sort -u > amass_netblock.txt")
