@@ -46,19 +46,34 @@ def download_resolvers(workdir):
 # Function to run amass and parse result into amass_parsed.txt
 def run_amass(domains, workdir, amass_loc):
     run_command(f"amass enum -df {domains} -config {amass_loc} -rf {workdir}/resolvers.txt --passive -o {workdir}/amass_raw.txt")
-    run_command(f"cat {workdir}/amass_raw.txt | grep 'cname' | sort -u > {workdir} amass_cnames.txt")
-    run_command(f"cat {workdir}/amass_raw.txt | grep '(IPAddress)' | cut -d '>' -f3 | cut -d ' ' -f2 | sort -u > amass_ipaddress.txt")
-    run_command(f"cat {workdir}/amass_raw.txt | grep '/' | cut -d '-' -f1 | grep '/' | cut -d ' ' -f1 | sort -u > amass_netblock.txt")
-    run_command(f"cat {workdir}/amass_raw.txt | grep ASN | sort -u > amass_asn.txt")
+    run_command(f"cat {workdir}/amass_raw.txt | grep 'cname' | sort -u > {workdir}/amass_cnames.txt")
+    run_command(f"cat {workdir}/amass_raw.txt | grep '(IPAddress)' | cut -d '>' -f3 | cut -d ' ' -f2 | sort -u > {workdir}/amass_ipaddress.txt")
+    run_command(f"cat {workdir}/amass_raw.txt | grep '/' | cut -d '-' -f1 | grep '/' | cut -d ' ' -f1 | sort -u > {workdir}/amass_netblock.txt")
+    run_command(f"cat {workdir}/amass_raw.txt | grep ASN | sort -u > {workdir}/amass_asn.txt")
     run_command(f'cat {workdir}/amass_raw.txt | grep "(FQDN)" | cut -d " " -f 1 | sort -u > {workdir}/amass_subdomains.txt')
 
-# Function to run amass and parse result into amass_parsed.txt
+# Function to run subfinder and parse result into subfinder.txt
 def run_subfinder(domains, workdir, subfinder_loc):
-	run_command(f"subfinder -dL {domains} -pc {subfinder_loc}/provider-config.yaml -o {workdir}/subfinder.txt")
+	run_command(f"subfinder -dL {domains} -pc {subfinder_loc} -o {workdir}/subfinder.txt")
+     
+# Function to run sublist3r and assetfinder and save result into sublister.txt and assetfinder.txt
+def run_sublister(file, workdir):  
+    with open(f"{file}", "r") as domains:   
+        for domain in domains:
+            run_command(f"sublist3r -d {domain} -o {workdir}/sublister_{domain}.txt")
+            run_command(f"touch {workdir}/sublister.txt")
+            run_command(f"cat {workdir}/sublister_{domain}.txt | anew {workdir}/sublister.txt")
+            run_command(f"assetfinder {domain} >> {workdir}/raw_assetfinder.txt")
+            run_command(f"cat {workdir}/raw_assetfinder.txt | gre'-v '*' >> {workdir}/assetfinder.txt")
+
+    with open(f"{workdir}/raw_assetfinder.txt", "r") as domains2:
+        for domain in domains2:
+            run_command(f"assetfinder {domain} >> {workdir}/assetfinder.txt")
+
 
 # Function to organize, sort and delete repeated subdoamins
 def organize(workdir):
-	run_command(f"cat {workdir}/subfinder.txt {workdir}/amass_subdomains.txt | sort -u | anew {workdir}/subdomains.txt")
+	run_command(f"cat {workdir}/subfinder.txt {workdir}/amass_subdomains.txt {workdir}/sublister.txt {workdir}/assetfinder.txt| sort -u | anew {workdir}/subdomains.txt")
 
 # Function to notify on discord the new subdomains and post the new ones through notify.
 def alive_subs(workdir):
@@ -69,6 +84,7 @@ def run_sub_recon(domains, workdir, amass_file, subfinder_file):
     download_resolvers(workdir)
     run_amass(domains, workdir, amass_file)
     run_subfinder(domains, workdir, subfinder_file)
+    run_sublister(domains, workdir)
     organize(workdir)
 
 
